@@ -38,7 +38,7 @@ svg.append("text")
     .attr("x", -height / 2)
     .attr("y", -margin.left + 20)
     .style("text-anchor", "middle")
-    .text("Tremor Severity");
+    .text("Average Tremor Severity (g)");
 
 // Color scale for different conditions
 const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
