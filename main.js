@@ -19,6 +19,10 @@ const yScale = d3.scaleLinear().range([height, 0]);
 const xAxis = svg.append("g").attr("transform", `translate(0,${height})`);
 const yAxis = svg.append("g");
 
+// Initialize gridlines
+const gridlines = svg.append("g")
+    .attr("class", "gridlines");
+
 // Add x-axis label
 svg.append("text")
     .attr("class", "axis-label")
@@ -67,6 +71,19 @@ d3.csv("condition.csv").then(data => {
     const maxSeverity = d3.max(data, d => d.tremor_severity);
     yScale.domain([0, maxSeverity]);
 
+    // Add gridlines
+    gridlines.selectAll("line")
+        .data(yScale.ticks())
+        .enter()
+        .append("line")
+        .attr("class", "gridline")
+        .attr("x1", 0)
+        .attr("x2", width)
+        .attr("y1", d => yScale(d))
+        .attr("y2", d => yScale(d))
+        .attr("stroke", "#ddd")
+        .attr("stroke-width", 1);
+
     updateChart(data);
 
     // Event listener for task dropdown
@@ -96,12 +113,33 @@ d3.csv("condition.csv").then(data => {
     console.error("Error loading CSV data:", error);
 });
 
+// Create movement descriptions
+const conditionDescriptions = {
+    'CrossArms': 'Cross and extend both arms.',
+    'DrinkGlas': 'Grasp an empty glass as if drinking from it.',
+    'Entrainment': 'The examiner stomps on the ground, setting the pace. Start stomping and leave the arms extended during the movement. ',
+    'HoldWeight': 'Hold one-kilogram weight in each hand for 5 secs.',
+    'LiftHold': 'Lift and extend arms and hold.',
+    'PointFinger': 'Point index finger to the examiners lifted hand.',
+    'Relaxed': 'Resting with closed eyes while sitting.',
+    'RelaxedTask': 'Resting while patient is calculating serial sevens.',
+    'StretchHold': 'Strech and hold your arms.',
+    'TouchIndex': 'Bring both index fingers to each other.',
+    'TouchNose': 'Tap own nose with index finger.'
+}
+
+// Get tooltip element
+const tooltip = d3.select(".tooltip");
+
 // Update chart function
 function updateChart(data) {
     const groupedData = d3.group(data, d => d.condition);
     const aggregatedData = Array.from(groupedData, ([condition, values]) => ({
         condition,
-        tremor_severity: d3.mean(values, d => d.tremor_severity)
+        tremor_severity: d3.mean(values, d => d.tremor_severity),
+        max_tremor_severity: d3.max(values, d => d.tremor_severity), // Add max tremor severity
+        task_name: values[0].task_name, // Add task name
+        task_description:  conditionDescriptions[values[0].task_name] // Add task description
     }));
 
     xScale.domain(aggregatedData.map(d => d.condition));
@@ -109,8 +147,7 @@ function updateChart(data) {
     const bars = svg.selectAll(".bar")
         .data(aggregatedData, d => d.condition);
 
-    // Enter
-    bars.enter()
+        bars.enter()
         .append("rect")
         .attr("class", "bar")
         .attr("x", d => xScale(d.condition))
@@ -118,16 +155,55 @@ function updateChart(data) {
         .attr("width", xScale.bandwidth())
         .attr("height", 0)
         .attr("fill", d => colorScale(d.condition))
-        .merge(bars)
+        .on("mouseover", function(event, d) {
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 0.9);
+            tooltip.html(`
+                <strong>Condition:</strong> ${d.condition}<br>
+                <strong>Description:</strong> ${d.task_description}<br>
+                <strong>Max Severity:</strong> ${d.max_tremor_severity.toFixed(4)}
+            `)
+                .style("left", (event.pageX + 5) + "px")
+                .style("top", (event.pageY - 28) + "px");
+    
+            // Fade out all bars except the hovered one
+            svg.selectAll(".bar")
+                .transition()
+                .duration(300)
+                .style("opacity", 0.3);  // Make others more transparent
+            
+            d3.select(this)
+                .transition()
+                .duration(300)
+                .style("opacity", 1);  // Keep hovered bar fully visible
+        })
+        .on("mouseout", function() {
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+    
+            // Restore opacity of all bars
+            svg.selectAll(".bar")
+                .transition()
+                .duration(300)
+                .style("opacity", 1);
+        })
         .transition()
+        .duration(500)
+        .attr("y", d => yScale(d.tremor_severity))
+        .attr("height", d => height - yScale(d.tremor_severity));
+
+    // Update existing bars
+    bars.transition()
         .duration(500)
         .attr("x", d => xScale(d.condition))
         .attr("y", d => yScale(d.tremor_severity))
         .attr("width", xScale.bandwidth())
         .attr("height", d => height - yScale(d.tremor_severity))
-        .attr("fill", d => colorScale(d.condition));
+        .attr("fill", d => colorScale(d.condition)); // Update color
 
-    // Exit
+    // Exit old bars
     bars.exit()
         .transition()
         .duration(500)
