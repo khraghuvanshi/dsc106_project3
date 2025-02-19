@@ -38,6 +38,9 @@ svg.append("text")
     .style("text-anchor", "middle")
     .text("Tremor Severity");
 
+// Color scale for different movements
+const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
 // Load data from CSV
 d3.csv("condition.csv").then(data => {
     // Convert tremor_severity to numbers
@@ -45,7 +48,7 @@ d3.csv("condition.csv").then(data => {
         d.tremor_severity = +d.tremor_severity;
     });
 
-    // Populate the dropdown with unique task names
+    // Get unique task names for the dropdown
     const taskNames = [...new Set(data.map(d => d.task_name))];
     const taskFilter = d3.select("#task-filter");
     taskNames.forEach(task => {
@@ -53,6 +56,10 @@ d3.csv("condition.csv").then(data => {
             .attr("value", task)
             .text(task);
     });
+
+    // Set a fixed y-axis domain based on the full data range
+    const maxSeverity = d3.max(data, d => d.tremor_severity);
+    yScale.domain([0, maxSeverity]);
 
     // Initial render with all data
     updateChart(data);
@@ -78,26 +85,45 @@ function updateChart(data) {
         tremor_severity: d3.mean(values, d => d.tremor_severity)
     }));
 
-    // Update scales
+    // Update x-scale domain
     xScale.domain(aggregatedData.map(d => d.condition));
-    yScale.domain([0, d3.max(aggregatedData, d => d.tremor_severity)]);
 
-    // Update bars
+    // Update bars with transitions
     const bars = svg.selectAll(".bar")
-        .data(aggregatedData);
+        .data(aggregatedData, d => d.condition);
 
+    // Enter new bars
     bars.enter()
         .append("rect")
         .attr("class", "bar")
-        .merge(bars)
+        .attr("x", d => xScale(d.condition))
+        .attr("y", height) // Start from the bottom
+        .attr("width", xScale.bandwidth())
+        .attr("height", 0) // Start with zero height
+        .attr("fill", d => colorScale(d.condition)) // Color by condition
+        .transition() // Smooth transition
+        .duration(500)
+        .attr("y", d => yScale(d.tremor_severity))
+        .attr("height", d => height - yScale(d.tremor_severity));
+
+    // Update existing bars
+    bars.transition()
+        .duration(500)
         .attr("x", d => xScale(d.condition))
         .attr("y", d => yScale(d.tremor_severity))
         .attr("width", xScale.bandwidth())
-        .attr("height", d => height - yScale(d.tremor_severity));
+        .attr("height", d => height - yScale(d.tremor_severity))
+        .attr("fill", d => colorScale(d.condition)); // Update color
 
-    bars.exit().remove();
+    // Exit old bars
+    bars.exit()
+        .transition()
+        .duration(500)
+        .attr("y", height)
+        .attr("height", 0)
+        .remove();
 
     // Update axes
-    xAxis.call(d3.axisBottom(xScale));
-    yAxis.call(d3.axisLeft(yScale));
+    xAxis.transition().duration(500).call(d3.axisBottom(xScale));
+    yAxis.transition().duration(500).call(d3.axisLeft(yScale));
 }
