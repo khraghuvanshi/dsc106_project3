@@ -28,6 +28,7 @@ svg {
 }
 
 .bar:hover {
+    transition: 1s;
     fill: rgb(0, 0, 0);
 }
 
@@ -35,4 +36,17 @@ svg {
     font-size: 14px;
     fill: #333;
     font-weight: bold;
+}
+
+.tooltip {
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+    opacity: 0; /* Initially hidden */
 }

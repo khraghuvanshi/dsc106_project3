@@ -113,12 +113,18 @@ d3.csv("condition.csv").then(data => {
     console.error("Error loading CSV data:", error);
 });
 
+// Get tooltip element
+const tooltip = d3.select(".tooltip");
+
 // Update chart function
 function updateChart(data) {
     const groupedData = d3.group(data, d => d.condition);
     const aggregatedData = Array.from(groupedData, ([condition, values]) => ({
         condition,
-        tremor_severity: d3.mean(values, d => d.tremor_severity)
+        tremor_severity: d3.mean(values, d => d.tremor_severity),
+        max_tremor_severity: d3.max(values, d => d.tremor_severity), // Add max tremor severity
+        task_name: values[0].task_name, // Add task name
+        task_description: values[0].task_description // Add task description
     }));
 
     xScale.domain(aggregatedData.map(d => d.condition));
@@ -126,25 +132,48 @@ function updateChart(data) {
     const bars = svg.selectAll(".bar")
         .data(aggregatedData, d => d.condition);
 
-    // Enter
-    bars.enter()
+        bars.enter()
         .append("rect")
         .attr("class", "bar")
         .attr("x", d => xScale(d.condition))
-        .attr("y", height)
+        .attr("y", height) // Start from the bottom
         .attr("width", xScale.bandwidth())
-        .attr("height", 0)
-        .attr("fill", d => colorScale(d.condition))
-        .merge(bars)
-        .transition()
+        .attr("height", 0) // Start with zero height
+        .attr("fill", d => colorScale(d.condition)) // Color by condition
+        .on("mouseover", function(event, d) {
+            // Show tooltip on hover
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 0.9);
+            tooltip.html(`
+                <strong>Movement:</strong> ${d.task_name}<br>
+                <strong>Description:</strong> ${d.task_description}<br>
+                <strong>Max Severity:</strong> ${d.max_tremor_severity.toFixed(4)}
+            `)
+                .style("left", (event.pageX + 5) + "px")
+                .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", function() {
+            // Hide tooltip on mouseout
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        })
+        .transition() // Smooth transition
+        .duration(500)
+        .attr("y", d => yScale(d.tremor_severity))
+        .attr("height", d => height - yScale(d.tremor_severity));
+
+    // Update existing bars
+    bars.transition()
         .duration(500)
         .attr("x", d => xScale(d.condition))
         .attr("y", d => yScale(d.tremor_severity))
         .attr("width", xScale.bandwidth())
         .attr("height", d => height - yScale(d.tremor_severity))
-        .attr("fill", d => colorScale(d.condition));
+        .attr("fill", d => colorScale(d.condition)); // Update color
 
-    // Exit
+    // Exit old bars
     bars.exit()
         .transition()
         .duration(500)
