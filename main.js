@@ -93,7 +93,15 @@ function updateChart(data) {
         .attr("x", d => xScale(d.condition))
         .attr("y", d => yScale(d.tremor_severity))
         .attr("width", xScale.bandwidth())
-        .attr("height", d => height - yScale(d.tremor_severity));
+        .attr("height", d => height - yScale(d.tremor_severity))
+        .on("mouseover", function(event, d) {
+            d3.select(this)
+                .style("fill", "orange");
+        })
+        .on("mouseout", function(event, d) {
+            d3.select(this)
+                .style("fill", "steelblue");
+        });
 
     bars.exit().remove();
 
