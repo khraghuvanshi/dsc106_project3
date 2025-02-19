@@ -125,7 +125,14 @@ function updateChart(data) {
         .attr("y", d => yScale(d.tremor_severity))
         .attr("width", xScale.bandwidth())
         .attr("height", d => height - yScale(d.tremor_severity))
-        .attr("fill", d => colorScale(d.condition));
+        .attr("fill", d => colorScale(d.condition))
+        .on("mouseover", function(event, d) {
+            d3.select(this)
+            .style("fill", "orange");
+            })
+        .on("mouseout", function(event, d) {
+            d3.select(this);
+            });
 
     // Exit
     bars.exit()
