@@ -1,6 +1,6 @@
 // Set up SVG dimensions
-const svgWidth = 800;
-const svgHeight = 600;
+const svgWidth = 1000;
+const svgHeight = 500;
 const margin = { top: 50, right: 30, bottom: 60, left: 60 };
 const width = svgWidth - margin.left - margin.right;
 const height = svgHeight - margin.top - margin.bottom;
@@ -107,6 +107,10 @@ d3.csv("condition.csv").then(data => {
             filteredData = filteredData.filter(d => selectedConditions.includes(d.condition));
         }
 
+        const taskDescription = document.querySelector('#task-description');
+        let currTask = document.querySelector('#task-filter');
+        taskDescription.innerHTML = conditionDescriptions[currTask.options[currTask.selectedIndex].text] || 'Average of all tasks.';
+        
         updateChart(filteredData);
     }
 }).catch(error => {
@@ -129,7 +133,7 @@ const conditionDescriptions = {
 }
 
 // Get tooltip element
-const tooltip = d3.select(".tooltip");
+const tooltip = d3.select("#tooltip");
 
 // Update chart function
 function updateChart(data) {
@@ -139,7 +143,10 @@ function updateChart(data) {
         tremor_severity: d3.mean(values, d => d.tremor_severity),
         max_tremor_severity: d3.max(values, d => d.tremor_severity), // Add max tremor severity
         task_name: values[0].task_name, // Add task name
-        task_description:  conditionDescriptions[values[0].task_name] // Add task description
+        task_description:  conditionDescriptions[values[0].task_name], // Add task description
+        avg_age: d3.mean(values, d => d.age), // Add max tremor severity
+        avg_age_diag: d3.mean(values, d => d.age_at_diagnosis), // Add max tremor severity
+        avg_height: d3.mean(values, d => d.height) // Add max tremor severity
     }));
 
     xScale.domain(aggregatedData.map(d => d.condition));
@@ -160,9 +167,10 @@ function updateChart(data) {
                 .duration(200)
                 .style("opacity", 0.9);
             tooltip.html(`
-                <strong>Condition:</strong> ${d.condition}<br>
-                <strong>Description:</strong> ${d.task_description}<br>
-                <strong>Max Severity:</strong> ${d.max_tremor_severity.toFixed(4)}
+                <strong>Max Severity:</strong> ${d.max_tremor_severity.toFixed(4)}<br>
+                <strong>Mean Age:</strong> ${d.avg_age.toFixed(0)}<br>
+                <strong>Mean Age at Diagnosis:</strong> ${d.avg_age_diag.toFixed(0)}<br>
+                <strong>Mean Height:</strong> ${d.avg_height.toFixed(0)}<br>
             `)
                 .style("left", (event.pageX + 5) + "px")
                 .style("top", (event.pageY - 28) + "px");

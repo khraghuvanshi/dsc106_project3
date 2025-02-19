@@ -38,7 +38,7 @@ svg {
     font-weight: bold;
 }
 
-.tooltip {
+#tooltip {
     position: absolute;
     background: #fff;
     border: 1px solid #ccc;
@@ -49,4 +49,23 @@ svg {
     font-size: 12px;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
     opacity: 0; /* Initially hidden */
+}
+
+h3 {
+    margin-top: 3rem;
+}
+
+#write-up {
+    margin-top: 1rem;
+    margin-right: 12rem;
+    margin-left: 12rem;
+    text-align: left;
+}
+
+p {
+    text-indent: 30px;
+}
+
+#authors {
+    text-align: middle;
 }

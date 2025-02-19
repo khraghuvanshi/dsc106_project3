@@ -1,43 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PADS Dataset Visualization</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h2>Parkinson’s Disease Tremor Severity Visualization</h2>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h2>
+      Which out of the 11 movements can be used most accurately <br />to predict
+      if someone has Parkinson’s Disease?
+    </h2>
 
     <div id="filter-section">
-        <label for="task-filter">Select Task:</label>
-        <select id="task-filter">
-            <option value="All">All Tasks</option>
-        </select>
+      <label for="task-filter"><strong>Select Task:</strong></label>
+      <select id="task-filter">
+        <option value="All">All Tasks</option>
+      </select>
     </div>
+    <br />
+    <div id="task-description">Average of all tasks.</div>
 
-    <h3>Select Conditions:</h3>
+    <h4>Select Conditions:</h4>
     <div id="condition-checkboxes"></div>
 
     <svg id="barChart"></svg>
-    <div id="tooltip" class="tooltip"></div>
+    <div id="tooltip"></div>
 
-    <h3> Movements </h3>
-    <ul> 
-        <li>CrossArms: Cross and extend both arms.</li>
-        <li> Drink Glass: Grasp an empty glass as if drinking from it.</li>
-        <li>Entrainment: The examiner stomps on the ground, setting the pace. Start stomping and leave the arms extended during the movement. </li>
-        <li> Hold Weight: Hold one-kilogram weight in each hand for 5 secs. </li>
-        <li>Lift Hold: Lift and extend arms and hold.</li>
-        <li>Point Finger: Point index finger to the examiners lifted hand.</li>
-        <li>Relaxed: Resting with closed eyes while sitting. </li>
-        <li>Relaxed Task: Resting while patient is calculating serial sevens. </li>
-        <li> Stretch Hold: Strech and hold your arms</li>
-        <li>Touch Index: Bring both index fingers to each other. </li>
-        <li> Touch Nose: Tap own nose with index finger. </li>
-    </ul>
-    
+    <h3>About this Visualization</h3>
+    <div id="write-up">
+      <p>Our development process began with extracting and processing sensor data
+      from the PADS Parkinson’s Disease Smartwatch dataset. We focused on the
+      movement data recorded from the left and right wrists across various
+      tasks. This setup was challenging because of the nested structure of the
+      data. Each subject performed up to 11 different tasks, with separate
+      sensor files for the left and right wrists. Extracting the relevant
+      accelerometer data required iterating over each subject and task, locating
+      the correct sensor file, reading the time-series data, and isolating the
+      x, y, and z-axis acceleration channels. We calculated the standard
+      deviation of these accelerometer readings across the three axes as a proxy
+      measure for tremor intensity, which is a common approach in wearable
+      sensor analysis.</p>
+        <p>
+      After obtaining tremor severity for each wrist and task,
+      we moved to baseline normalization. The idea was to use the "Relaxed" task
+      as a baseline for each wrist and calculate the difference in tremor
+      severity for other tasks relative to this baseline. The process of
+      computing the severity difference involved merging the baseline severity
+      back into the tremor dataset and calculating the difference for each
+      task-wrist combination. 
+    </p>
+      <p>
+      We chose a bar chart with bar height representing
+      tremor severity because it is an intuitive and highly effective visual
+      encoding for magnitude comparisons. Bar charts leverage length/height as
+      the primary visual channel to represent quantitative data. Human
+      perception is highly attuned to comparing lengths along a common baseline,
+      which makes it easier for viewers to accurately compare the differences in
+      tremor severity across conditions. Each condition is plotted along the
+      x-axis, making it easier for users to compare groups side by side.
+      Additionally, color hue is used to reinforce condition identity, with each
+      condition being assigned a unique color. Additionally, horizontal
+      gridlines were added to the chart to assist with estimating the tremor
+      severity along the y-axis, supporting magnitude comparison. 
+    </p>
+    <p>
+      To enhance the exploratory analysis, we also incorporated interactivity 
+      to allow the user
+      to filter the data along two key attributes.
+      The Task Selection Dropdown
+      allows the user to choose a specific movement task (e.g., Relaxed, Hold
+      Weight, etc.) to see how tremor severity varies by condition during that
+      task. The dropdown menu was used to reduce clutter, as it deals with 11
+      tasks. 
+      The Condition Checkboxes allow users to select specific diagnostic
+      groups (conditions) such as Healthy, Parkinson's, Atypical Parkinsonism,
+      etc. This is important as users may be interested in comparing specific
+      subsets like Parkinson's vs. Healthy, reducing visual clutter by excluding
+      less relevant conditions. 
+    </p>
+      
+      <p>
+      Additionally, we also implemented a tooltip that
+      appears when the user hovers over a bar. The tooltip displays the
+      condition, task description, and maximum tremor severity for that
+      condition and task. This provides more context and detailed information
+      without cluttering the chart. Bar highlighting was also used to improve
+      user focus. When hovering over a bar, the other bars have a visual fading
+      effect while the hovered bar remains fully visible. This directs the
+      user's attention to eh selected condition and improves visual clarity when
+      comparing values. 
+    </p>
+      <p>
+        In summary, our development process involved extracting
+      and processing sensor data, computing tremor severity, and normalizing it
+      against a baseline to facilitate meaningful comparisons. By leveraging a
+      bar chart as our primary visualization, we ensured an intuitive and
+      effective representation of tremor severity across tasks and conditions.
+      Interactive elements such as the task selection dropdown, conditions
+      checkbox, tooltips, and bar highlighting further enhance usability,
+      allowing users to explore the data dynamically and focus on specific
+      comparisons. These design choices collectively create a clear and
+      informative visualization that supports both detailed analysis and broad
+      insights into tremor severity variations across different movement tasks
+      and diagnostic groups.
+      </p>
+    </div>
+
+
     <script src="main.js"></script>
-</body>
+  </body>
 </html>
