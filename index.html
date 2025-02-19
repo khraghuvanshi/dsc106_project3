@@ -10,10 +10,14 @@
 <body>
     <h2>Parkinson’s Disease Data Visualization</h2>
     
-    <label><input type="checkbox" id="taskFilter" checked> Include Task Name</label>
+    <div id="filter">
+        <label for="task-filter">Select Movement:</label>
+        <select id="task-filter">
+            <option value="All">All</option>
+        </select>
+    </div>
     
     <svg id="barChart" class="chart"></svg>
-    <svg id="lineChart" class="chart"></svg>
     
     <script src="main.js"></script>
 </body>
