@@ -1,35 +1,69 @@
+const svgWidth = 800;
+const svgHeight = 600;
+const margin = { top: 50, right: 30, bottom: 50, left: 60 };
+const width = svgWidth - margin.left - margin.right;
+const height = svgHeight - margin.top - margin.bottom;
+
+// Create SVG container
+const svg = d3.select("svg")
+    .attr("width", svgWidth)
+    .attr("height", svgHeight)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+// Load data from CSV
 d3.csv("merged_data.csv").then(data => {
-    console.log(data); // Inspect data structure
+    // Convert tremor_severity to numbers
+    data.forEach(d => {
+        d.tremor_severity = +d.tremor_severity;
+    });
 
-    let taskFilter = document.getElementById("taskFilter");
-    
-    function updateChart() {
-        let filteredData = taskFilter.checked ? data : data.filter(d => d.task_name === "");
-        
-        let groupedData = d3.rollup(filteredData, v => v.length, d => d.patient_group);
-        let barData = Array.from(groupedData, ([key, value]) => ({ group: key, count: value }));
+    // Set up scales
+    const xScale = d3.scaleBand()
+        .domain(data.map(d => d.condition))
+        .range([0, width])
+        .padding(0.1);
 
-        let width = 800, height = 400;
-        let svg = d3.select("#barChart")
-                    .attr("width", width)
-                    .attr("height", height);
-        
-        let x = d3.scaleBand().domain(barData.map(d => d.group)).range([0, width]).padding(0.3);
-        let y = d3.scaleLinear().domain([0, d3.max(barData, d => d.count)]).range([height, 0]);
-        
-        svg.selectAll(".bar").remove();
-        
-        svg.selectAll(".bar")
-           .data(barData)
-           .enter().append("rect")
-           .attr("class", "bar")
-           .attr("x", d => x(d.group))
-           .attr("y", d => y(d.count))
-           .attr("width", x.bandwidth())
-           .attr("height", d => height - y(d.count))
-           .attr("fill", "steelblue");
-    }
-    
-    taskFilter.addEventListener("change", updateChart);
-    updateChart();
+    const yScale = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.tremor_severity)])
+        .range([height, 0]);
+
+    // Create bars
+    svg.selectAll(".bar")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", d => xScale(d.condition))
+        .attr("y", d => yScale(d.tremor_severity))
+        .attr("width", xScale.bandwidth())
+        .attr("height", d => height - yScale(d.tremor_severity));
+
+    // Add x-axis
+    svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(xScale));
+
+    // Add y-axis
+    svg.append("g")
+        .call(d3.axisLeft(yScale));
+
+    // Add x-axis label
+    svg.append("text")
+        .attr("class", "axis-label")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom - 10)
+        .style("text-anchor", "middle")
+        .text("Condition");
+
+    // Add y-axis label
+    svg.append("text")
+        .attr("class", "axis-label")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -margin.left + 20)
+        .style("text-anchor", "middle")
+        .text("Tremor Severity");
+}).catch(error => {
+    console.error("Error loading the CSV data:", error);
 });
