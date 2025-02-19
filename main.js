@@ -19,6 +19,10 @@ const yScale = d3.scaleLinear().range([height, 0]);
 const xAxis = svg.append("g").attr("transform", `translate(0,${height})`);
 const yAxis = svg.append("g");
 
+// Initialize gridlines
+const gridlines = svg.append("g")
+    .attr("class", "gridlines");
+
 // Add x-axis label
 svg.append("text")
     .attr("class", "axis-label")
@@ -66,6 +70,19 @@ d3.csv("condition.csv").then(data => {
 
     const maxSeverity = d3.max(data, d => d.tremor_severity);
     yScale.domain([0, maxSeverity]);
+
+    // Add gridlines
+    gridlines.selectAll("line")
+        .data(yScale.ticks())
+        .enter()
+        .append("line")
+        .attr("class", "gridline")
+        .attr("x1", 0)
+        .attr("x2", width)
+        .attr("y1", d => yScale(d))
+        .attr("y2", d => yScale(d))
+        .attr("stroke", "#ddd")
+        .attr("stroke-width", 1);
 
     updateChart(data);
 
